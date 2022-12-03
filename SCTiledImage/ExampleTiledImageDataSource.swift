@@ -15,19 +15,26 @@ class ExampleTiledImageDataSource: SCTiledImageViewDataSource {
     let imageSize: CGSize
     let tileSize: CGSize
     let zoomLevels: Int
+    var dir:String = ""
     
-    init(imageSize: CGSize, tileSize: CGSize, zoomLevels: Int) {
+    init(imageSize: CGSize, tileSize: CGSize, zoomLevels: Int, dir: String) {
         self.imageSize = imageSize
         self.tileSize = tileSize
         self.zoomLevels = zoomLevels
+        self.dir = dir
     }
     
     func requestTiles(_ tiles: [SCTile]) {
         DispatchQueue.global(qos: .userInitiated).async { [weak self] in
             var res: [(SCTile, UIImage)] = []
             for tile in tiles {
-                let name = "\(tile.level)-\(tile.col)-\(tile.row).jpg"
-                if let image = UIImage(named: name) {
+                let manager = FileManager.default
+                guard let url = manager.urls(for: .documentDirectory, in: .userDomainMask).first else {
+                    return
+                }
+                let imageUrl = url.appendingPathComponent("\(self!.dir)/\(tile.level)-\(tile.col)-\(tile.row).jpg")
+                
+                if let image = UIImage(contentsOfFile: imageUrl.path) {
                    res.append((tile, image))
                 }
             }
